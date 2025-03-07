@@ -1,9 +1,12 @@
 version: 2.1
 
 parameters:
-  run_daily_replay:
-    type: boolean
-    default: false
+  replay-days:
+    type: integer
+    default: 2
+  commit-delay:
+    type: integer
+    default: 10
 
 jobs:
   run_replay_job:
@@ -28,12 +31,11 @@ jobs:
                     --github-repo-slug $GITHUB_REPO_SLUG \
                     --github-token $GITHUB_TOKEN \
                     --log-path . \
-                    --commit-delay 10 \
-                    --replay-days 4
+                    --commit-delay << pipeline.parameters.commit-delay >>  \
+                    --replay-days << pipeline.parameters.replay-days >>
 
 workflows:
   daily_replay_workflow:
-    # when: << pipeline.parameters.run_daily_replay >>
     jobs:
       - run_replay_job:
           context:
