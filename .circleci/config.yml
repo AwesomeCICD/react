@@ -1,0 +1,43 @@
+version: 2.1
+
+parameters:
+  run_daily_replay:
+    type: boolean
+    default: false
+
+jobs:
+  run_replay_job:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+    environment:
+      GITHUB_REPO_SLUG: AwesomeCICD/react
+    steps:
+      - checkout
+      - run:
+          name: Install Python Requirements
+          command: pip install -r requirements.txt
+      - run:
+          name: Run Replay Script
+          no_output_timeout: 20m
+          # Add --branch branch_name to customize the branch used
+          command: |
+                  python3 replay_commits.py \
+                    --upstream-repo-url $UPSTREAM_REPO \
+                    --config-path $CONFIG_PATH \
+                    --github-repo-slug $GITHUB_REPO_SLUG \
+                    --github-token $GITHUB_TOKEN \
+                    --log-path . \
+                    --commit-delay 10 \
+                    --replay-days 4
+
+workflows:
+  daily_replay_workflow:
+    # when: << pipeline.parameters.run_daily_replay >>
+    jobs:
+      - run_replay_job:
+          context:
+            - replay-commits
+          filters:
+            branches:
+              only: main
